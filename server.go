@@ -8,10 +8,13 @@ import (
     "encoding/json"
     "strconv"
     "strings"
+    "time"
+    "math/rand"
 )
 
 const (
     pigFileId = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
+    dogeFileId = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
 )
 
 type Chat struct {
@@ -27,6 +30,8 @@ type Object struct {
     Message Message `json:"message"`
 }
 
+var dogeSubscription = false
+
 func handler(w http.ResponseWriter, r *http.Request) {
     //data, _ := httputil.DumpRequest(r, true)
     //fmt.Printf("%s\n\n", data)
@@ -39,9 +44,26 @@ func handler(w http.ResponseWriter, r *http.Request) {
     index := strings.Index(object.Message.Text, "/punto")
     if index != -1 {
         sendSticker(object.Message.Chat.Id, pigFileId)
-    } else {
-        sendMessage(object.Message.Chat.Id, object.Message.Text)
+        return
     }
+
+    index = strings.Index(object.Message.Text, "/doge")
+    if index != -1 {
+        if !dogeSubscription {
+            dogeSubscription = true
+            go dogeSender(object.Message.Chat.Id)
+        }
+        return
+    }
+
+    sendMessage(object.Message.Chat.Id, object.Message.Text)
+}
+
+func dogeSender(id int) {
+    delay := rand.Intn(60 * 4) + 60 * 8
+    time.Sleep(time.Duration(delay) * time.Minute)
+    sendSticker(id, dogeFileId)
+    go dogeSender(id)
 }
 
 func sendMessage(id int, text string) {
