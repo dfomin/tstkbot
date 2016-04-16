@@ -47,6 +47,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    index = strings.Index(object.Message.Text, "/judge")
+    if index != -1 {
+        names := strings.Split(object.Message.Text, " ")
+        judge(object.Message.Chat.Id, names[1:])
+        return
+    }
+
     index = strings.Index(object.Message.Text, "/doge")
     if index != -1 {
         if !dogeSubscription {
@@ -57,6 +64,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
     }
 
     sendMessage(object.Message.Chat.Id, object.Message.Text)
+}
+
+func judge(id int, names []string) {
+    phrases := []string{"ноет", "по делу", "не по делу", "развернул шатер", "клоун", "без нытья", "сел в лужу", "кромсает", "уничтожил на молекулы", "перебор"}
+    var result string
+    for _, name := range names {
+        phrase := phrases[rand.Intn(len(phrases))]
+        result += name + " " + phrase + ", "
+    }
+
+    sendMessage(id, result[:len(result)-2])
 }
 
 func dogeSender(id int) {
