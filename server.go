@@ -50,7 +50,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
     index = strings.Index(object.Message.Text, "/judge")
     if index != -1 {
         names := strings.Split(object.Message.Text, " ")
-        if len(names) > 0 {
+        if len(names) > 1 {
             judge(object.Message.Chat.Id, names[1:])
         } else {
             sendMessage(object.Message.Chat.Id, "бесишь")
