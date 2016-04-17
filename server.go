@@ -67,7 +67,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    sendMessage(object.Message.Chat.Id, object.Message.Text)
+    sendMessage(object.Message.Chat.Id, selectAnswer())
 }
 
 func judge(id int, names []string) {
@@ -87,7 +87,9 @@ func judge(id int, names []string) {
         "самоуничтожился",
         "несет чушь",
         "жопка в тепле",
-        "бесит"}
+        "бесит",
+        "байки травит",
+    }
     var result string
     for _, name := range names {
         phrase := phrases[rand.Intn(len(phrases))]
@@ -115,6 +117,21 @@ func sendMessage(id int, text string) {
         fmt.Println(err)
     }
     defer resp.Body.Close()
+}
+
+func selectAnswer() string {
+    answers := []string{
+        "и че?",
+        "ну и?",
+        "тебя не спросил",
+        "отр",
+        "о том и речь",
+        "ноешь",
+        "байки",
+        "хм",
+    }
+
+    return answers[rand.Intn(len(answers))]
 }
 
 func sendSticker(id int, fileId string) {
