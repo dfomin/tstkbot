@@ -93,6 +93,7 @@ func judge(id int, names []string) {
         "бомбанул",
         "отскок",
         "устроил срач",
+        "куда полез?",
     }
     var result string
     for _, name := range names {
