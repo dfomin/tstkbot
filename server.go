@@ -137,6 +137,7 @@ func selectAnswer() string {
         "хер знает",
         "😬😬😬",
         "офк",
+        "чушь",
     }
 
     return answers[rand.Intn(len(answers))]
