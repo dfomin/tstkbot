@@ -3,7 +3,7 @@ package main
 import (
     "fmt"
     "net/http"
-    //"net/http/httputil"
+    "net/http/httputil"
     "net/url"
     "encoding/json"
     "strconv"
@@ -33,8 +33,8 @@ type Object struct {
 var dogeSubscription = false
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    //data, _ := httputil.DumpRequest(r, true)
-    //fmt.Printf("%s\n\n", data)
+    data, _ := httputil.DumpRequest(r, true)
+    fmt.Printf("%s\n\n", data)
     var object Object
     err := json.NewDecoder(r.Body).Decode(&object)
     if err != nil {
