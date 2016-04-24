@@ -149,14 +149,14 @@ func processCommand(command string, text string, object *Object) {
 		processPuntoCommand(object)
 	} else if command == "/judge" || command == "/judge@TstkBot" {
 		processJudgeCommand(object.Message.Chat.ID, text)
-	} else if command == "/judgeAdd" || command == "/judgeAdd@TstkBot" {
+	} else if command == "/judgeadd" || command == "/judgeadd@TstkBot" {
 		chatID := object.Message.Chat.ID
 		phrase := text
 		userID := object.Message.From.ID
 		processJudgeAddCommand(chatID, phrase, userID)
-	} else if command == "/judgeRemove" || command == "/judgeRemove@TstkBot" {
+	} else if command == "/judgeremove" || command == "/judgeremove@TstkBot" {
 		processJudgeRemoveCommand()
-	} else if command == "/judgeList" || command == "/judgeList@TstkBot" {
+	} else if command == "/judgelist" || command == "/judgelist@TstkBot" {
 		processJudgeListCommand(object.Message.Chat.ID)
 	}
 }
