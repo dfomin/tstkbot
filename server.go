@@ -14,16 +14,24 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
-	pigFileID             = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
-	dogeFileID            = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
+	pigFileID  = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
+	dogeFileID = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
+
 	chickenNoFileID       = "BQADAgADswIAAkKvaQABArcCG5J-M4IC"
 	chickenThinkingFileID = "BQADAgADvwIAAkKvaQABKt6_X0LBVfYC"
 	chickenThumbUpFileID  = "BQADAgADnQIAAkKvaQABUb3ik6MhZwcC"
-	penguinDunnoFileID    = "BQADAQADyCIAAtpxZge0ITVcWNv_vwI"
-	penguinLookOutFileID  = "BQADAQADvCIAAtpxZgf5jpah4VvMqQI"
+	chickenFacepalmFileID = "BQADAgADqwIAAkKvaQABEeHC3ECjvqwC"
+	chickenWaitingFileID  = "BQADAgADsQIAAkKvaQAB72oOFFT5ryoC"
+	chickenWhatFileID     = "BQADAgADvQIAAkKvaQABeZwGMzfkLroC"
+	chickenWritingFileID  = "BQADAgADMQsAAkKvaQABwFPldEcMt14C"
+	chickenDeadFileID     = "BQADAgADPQsAAkKvaQABih96aCmG-gQC"
+
+	penguinDunnoFileID   = "BQADAQADyCIAAtpxZge0ITVcWNv_vwI"
+	penguinLookOutFileID = "BQADAQADvCIAAtpxZgf5jpah4VvMqQI"
 
 	apiURL = `https://api.telegram.org/bot120816766:AAHuy66RPZLVt3JwBWPwGh2Ndxt_KwAXYlE/`
 
@@ -40,6 +48,11 @@ type Chat struct {
 	Type string `json:"type"`
 }
 
+// From represents user who sended message
+type From struct {
+	ID int `json:"id"`
+}
+
 // Entity represents telegram message entity
 type Entity struct {
 	Type   string `json:"type"`
@@ -49,6 +62,7 @@ type Entity struct {
 
 // Message represents telegram message info
 type Message struct {
+	From     From     `json:"from"`
 	Chat     Chat     `json:"chat"`
 	Text     string   `json:"text"`
 	Entities []Entity `json:"entities,omitempty"`
@@ -62,6 +76,12 @@ type Object struct {
 // JudgePhrase represents phrases for judging
 type JudgePhrase struct {
 	Phrase string `json:"phrase"`
+}
+
+// JudgePhraseCandidate represents candidate phrases for judging
+type JudgePhraseCandidate struct {
+	Phrase string `json:"phrase"`
+	Users  []int  `json:"users"`
 }
 
 var mgoSession *mgo.Session
@@ -93,32 +113,38 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 	// Check chat, only tstk chat is supported
 	chat := object.Message.Chat
 	if chat.ID != tstkChatID && chat.Type == "group" {
-		sendMessage(chat.ID, "Тарахчу только в королях")
+		sendMessage(chat.ID, "тарахчу только в королях")
 		sendSticker(chat.ID, chickenNoFileID)
 		return
 	}
 
 	// Check command
-	commandType := checkCommand(&object)
+	commandType, text := checkCommand(&object)
 	fmt.Println(commandType)
 	if commandType != "" {
-		processCommand(commandType, &object)
+		processCommand(commandType, text, &object)
 	} else {
 		processMessage(&object)
 	}
 }
 
-func checkCommand(object *Object) string {
+func checkCommand(object *Object) (string, string) {
 	for _, entity := range object.Message.Entities {
 		if entity.Type == "bot_command" {
-			return object.Message.Text[entity.Offset : entity.Offset+entity.Length]
+			command := object.Message.Text[entity.Offset : entity.Offset+entity.Length]
+			text := ""
+			if len(object.Message.Text) > entity.Offset+entity.Length+1 {
+				text = object.Message.Text[entity.Offset+entity.Length+1:]
+			}
+
+			return command, text
 		}
 	}
 
-	return ""
+	return "", object.Message.Text
 }
 
-func processCommand(command string, object *Object) {
+func processCommand(command string, text string, object *Object) {
 	if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
 	} else if command == "/judge" || command == "/judge@TstkBot" {
@@ -130,7 +156,10 @@ func processCommand(command string, object *Object) {
 			sendMessage(object.Message.Chat.ID, "бесишь")
 		}
 	} else if command == "/judgeAdd" || command == "/judgeAdd@TstkBot" {
-		processJudgeAddCommand()
+		chatID := object.Message.Chat.ID
+		phrase := text
+		userID := object.Message.From.ID
+		processJudgeAddCommand(chatID, phrase, userID)
 	} else if command == "/judgeRemove" || command == "/judgeRemove@TstkBot" {
 		processJudgeRemoveCommand()
 	} else if command == "/judgeList" || command == "/judgeList@TstkBot" {
@@ -179,8 +208,80 @@ func processJudgeCommand(id int, names []string) {
 	sendMessage(id, result[:len(result)-2])
 }
 
-func processJudgeAddCommand() {
+func processJudgeAddCommand(chatID int, phrase string, userID int) {
+	sessionCopy := mgoSession.Copy()
+	defer sessionCopy.Close()
 
+	// Check that already added
+	var phrases []JudgePhrase
+	database := sessionCopy.DB(databaseName)
+	phrasesCollection := database.C("judgePhrases")
+	err := phrasesCollection.Find(bson.M{"phrase": phrase}).All(&phrases)
+	if err != nil {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
+	}
+
+	if len(phrases) > 0 {
+		sendSticker(chatID, chickenWhatFileID)
+		return
+	}
+
+	var candidates []JudgePhraseCandidate
+	candidatesCollection := database.C("judgePhrasesCandidates")
+	err = candidatesCollection.Find(bson.M{"phrase": phrase}).All(&candidates)
+	if err != nil {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
+	}
+
+	if len(candidates) > 1 {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
+	}
+
+	var candidate JudgePhraseCandidate
+	if len(candidates) == 0 {
+		var newCandidate JudgePhraseCandidate
+		newCandidate.Phrase = phrase
+		newCandidate.Users = make([]int, 3)
+	} else {
+		candidate = candidates[0]
+	}
+
+	// Add new user
+	for i := 0; i < 3; i++ {
+		if candidate.Users[i] == 0 {
+			candidate.Users[i] = userID
+			break
+		} else if candidate.Users[i] == userID {
+			break
+		}
+	}
+
+	// Count how much users
+	count := 3
+	for i := 0; i < 3; i++ {
+		if candidate.Users[i] == 0 {
+			count = i
+		}
+	}
+
+	// TODO: check errors
+	switch count {
+	case 1:
+		_, err = candidatesCollection.Upsert(bson.M{"phrase": phrase}, candidate)
+		sendSticker(chatID, chickenNoFileID)
+	case 2:
+		_, err = candidatesCollection.Upsert(bson.M{"phrase": phrase}, candidate)
+		sendSticker(chatID, chickenThinkingFileID)
+	case 3:
+		err = candidatesCollection.Remove(bson.M{"phrase": phrase})
+		var newPhrase JudgePhrase
+		newPhrase.Phrase = phrase
+		_, err = phrasesCollection.Upsert(bson.M{"phrase": phrase}, newPhrase)
+		sendSticker(chatID, chickenWritingFileID)
+	}
 }
 
 func processJudgeRemoveCommand() {
