@@ -59,6 +59,7 @@ type Object struct {
 	Message Message `json:"message"`
 }
 
+// JudgePhrase represents phrases for judging
 type JudgePhrase struct {
 	Phrase string `json:"phrase"`
 }
@@ -67,7 +68,8 @@ var mgoSession *mgo.Session
 
 // InitDatabase represents database initialization
 func InitDatabase(databaseName string) {
-	mgoSession, err := mgo.Dial(MongoDBHost)
+	var err error
+	mgoSession, err = mgo.Dial(MongoDBHost)
 	if err != nil {
 		fmt.Println("Failed to connect to database")
 		log.Fatal(err)
