@@ -116,7 +116,7 @@ func processCommand(command string, object *Object) {
 }
 
 func processPuntoCommand(object *Object) {
-	count := rand.Intn(4) + 1
+	count := rand.Intn(5) + 1
 	for i := 0; i < count; i++ {
 		sendSticker(object.Message.Chat.ID, pigFileID)
 	}
