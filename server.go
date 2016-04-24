@@ -148,13 +148,7 @@ func processCommand(command string, text string, object *Object) {
 	if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
 	} else if command == "/judge" || command == "/judge@TstkBot" {
-		// TODO: fix
-		names := strings.Split(object.Message.Text, " ")
-		if len(names) > 1 {
-			processJudgeCommand(object.Message.Chat.ID, names[1:])
-		} else {
-			sendMessage(object.Message.Chat.ID, "бесишь")
-		}
+		processJudgeCommand(object.Message.Chat.ID, text)
 	} else if command == "/judgeAdd" || command == "/judgeAdd@TstkBot" {
 		chatID := object.Message.Chat.ID
 		phrase := text
@@ -174,7 +168,20 @@ func processPuntoCommand(object *Object) {
 	}
 }
 
-func processJudgeCommand(chatID int, names []string) {
+func processJudgeCommand(chatID int, text string) {
+	elements := strings.Split(text, " ")
+	names := make([]string, len(elements))
+	count := 0
+	for _, element := range elements {
+		name := strings.TrimSpace(element)
+		if name != "" {
+			names[count] = name
+			count++
+		}
+	}
+
+	names = names[:count]
+
 	sessionCopy := mgoSession.Copy()
 	defer sessionCopy.Close()
 
