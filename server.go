@@ -94,7 +94,7 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 func checkCommand(object *Object) string {
 	for _, entity := range object.Message.Entities {
 		if entity.Type == "bot_command" {
-			return object.Message.Text[entity.Offset : entity.Offset + entity.Length]
+			return object.Message.Text[entity.Offset : entity.Offset+entity.Length]
 		}
 	}
 
@@ -102,45 +102,27 @@ func checkCommand(object *Object) string {
 }
 
 func processCommand(command string, object *Object) {
-
-}
-
-func processMessage(object *Object) {
-
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	data, _ := httputil.DumpRequest(r, true)
-	fmt.Printf("%s\n\n", data)
-	var object Object
-	err := json.NewDecoder(r.Body).Decode(&object)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	index := strings.Index(object.Message.Text, "/punto")
-	if index != -1 {
-		sendSticker(object.Message.Chat.ID, pigFileID)
-		return
-	}
-
-	index = strings.Index(object.Message.Text, "/judge")
-	if index != -1 {
+	if command == "/punto" {
+		processPuntoCommand(object)
+	} else if command == "/judge" {
+		// TODO: fix
 		names := strings.Split(object.Message.Text, " ")
 		if len(names) > 1 {
-			judge(object.Message.Chat.ID, names[1:])
+			processJudgeCommand(object.Message.Chat.ID, names[1:])
 		} else {
 			sendMessage(object.Message.Chat.ID, "бесишь")
 		}
-		return
 	}
-
-	index = strings.Index(object.Message.Text, "/doge")
-
-	sendMessage(object.Message.Chat.ID, selectAnswer())
 }
 
-func judge(id int, names []string) {
+func processPuntoCommand(object *Object) {
+	count := rand.Intn(4) + 1
+	for i := 0; i < count; i++ {
+		sendSticker(object.Message.Chat.ID, pigFileID)
+	}
+}
+
+func processJudgeCommand(id int, names []string) {
 	phrases := []string{
 		"ноет",
 		"по делу",
@@ -172,6 +154,25 @@ func judge(id int, names []string) {
 	}
 
 	sendMessage(id, result[:len(result)-2])
+}
+
+func processMessage(object *Object) {
+	text := object.Message.Text
+	if string(text[len(text)-1]) == "?" {
+		processQuestionMessage(object)
+	} else {
+		processStatementMessage(object)
+	}
+
+	//sendMessage(object.Message.Chat.ID, selectAnswer())
+}
+
+func processQuestionMessage(object *Object) {
+	sendMessage(object.Message.Chat.ID, "не знаю, фома не накодил")
+}
+
+func processStatementMessage(object *Object) {
+	sendMessage(object.Message.Chat.ID, "фома не накодил")
 }
 
 func dogeSender(id int) {
