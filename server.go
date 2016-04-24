@@ -227,6 +227,12 @@ func processJudgeCommand(chatID int, text string) {
 }
 
 func processJudgeAddCommand(chatID int, phrase string, userID int) {
+	index := strings.Index(phrase, "#")
+	if index == -1 {
+		sendSticker(chatID, chickenFacepalmFileID)
+		return
+	}
+
 	sessionCopy := mgoSession.Copy()
 	defer sessionCopy.Close()
 
