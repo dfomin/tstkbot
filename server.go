@@ -17,21 +17,27 @@ import (
 )
 
 const (
-	pigFileID       = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
-	dogeFileID      = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
-	chickenNoFileID = "BQADAgADswIAAkKvaQABArcCG5J-M4IC"
+	pigFileID             = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
+	dogeFileID            = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
+	chickenNoFileID       = "BQADAgADswIAAkKvaQABArcCG5J-M4IC"
+	chickenThinkingFileID = "BQADAgADvwIAAkKvaQABKt6_X0LBVfYC"
+	chickenThumbUpFileID  = "BQADAgADnQIAAkKvaQABUb3ik6MhZwcC"
+	penguinDunnoFileID    = "BQADAQADyCIAAtpxZge0ITVcWNv_vwI"
+	penguinLookOutFileID  = "BQADAQADvCIAAtpxZgf5jpah4VvMqQI"
 
 	apiURL = `https://api.telegram.org/bot120816766:AAHuy66RPZLVt3JwBWPwGh2Ndxt_KwAXYlE/`
 
 	// MongoDBHost represents mongo db host and port
-	MongoDBHost = "127.0.0.1:27017"
+	MongoDBHost  = "127.0.0.1:27017"
+	databaseName = "tstkbot"
 
 	tstkChatID = -14369410
 )
 
 // Chat represents telegram chat info
 type Chat struct {
-	ID int `json:"id"`
+	ID   int    `json:"id"`
+	Type string `json:"type"`
 }
 
 // Entity represents telegram message entity
@@ -53,10 +59,8 @@ type Object struct {
 	Message Message `json:"message"`
 }
 
-// Controller represents controller for database
-type Controller struct {
-	DatabaseName string
-	Session      *mgo.Session
+type JudgePhrase struct {
+	Phrase string `json:"phrase"`
 }
 
 var mgoSession *mgo.Session
@@ -85,9 +89,10 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check chat, only tstk chat is supported
-	if object.Message.Chat.ID != tstkChatID {
-		sendMessage(object.Message.Chat.ID, "Тарахчу только в королях")
-		sendSticker(object.Message.Chat.ID, chickenNoFileID)
+	chat := object.Message.Chat
+	if chat.ID != tstkChatID && chat.Type == "group" {
+		sendMessage(chat.ID, "Тарахчу только в королях")
+		sendSticker(chat.ID, chickenNoFileID)
 		return
 	}
 
@@ -112,9 +117,9 @@ func checkCommand(object *Object) string {
 }
 
 func processCommand(command string, object *Object) {
-	if command == "/punto" {
+	if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
-	} else if command == "/judge" {
+	} else if command == "/judge" || command == "/judge@TstkBot" {
 		// TODO: fix
 		names := strings.Split(object.Message.Text, " ")
 		if len(names) > 1 {
@@ -122,6 +127,12 @@ func processCommand(command string, object *Object) {
 		} else {
 			sendMessage(object.Message.Chat.ID, "бесишь")
 		}
+	} else if command == "/judgeAdd" || command == "/judgeAdd@TstkBot" {
+		processJudgeAddCommand()
+	} else if command == "/judgeRemove" || command == "/judgeRemove@TstkBot" {
+		processJudgeRemoveCommand()
+	} else if command == "/judgeList" || command == "/judgeList@TstkBot" {
+		processJudgeListCommand(object.Message.Chat.ID)
 	}
 }
 
@@ -164,6 +175,40 @@ func processJudgeCommand(id int, names []string) {
 	}
 
 	sendMessage(id, result[:len(result)-2])
+}
+
+func processJudgeAddCommand() {
+
+}
+
+func processJudgeRemoveCommand() {
+
+}
+
+func processJudgeListCommand(chatID int) {
+	sessionCopy := mgoSession.Copy()
+	defer sessionCopy.Close()
+
+	var phrases []JudgePhrase
+	database := sessionCopy.DB(databaseName)
+	phrasesCollection := database.C("judgePhrases")
+	err := phrasesCollection.Find(nil).All(&phrases)
+	if err != nil {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
+	}
+
+	if len(phrases) == 0 {
+		sendSticker(chatID, penguinDunnoFileID)
+		return
+	}
+
+	answer := ""
+	for _, phrase := range phrases {
+		answer += phrase.Phrase + "\n"
+	}
+
+	sendMessage(chatID, answer)
 }
 
 func processMessage(object *Object) {
@@ -243,7 +288,7 @@ func sendSticker(id int, fileID string) {
 }
 
 func main() {
-	InitDatabase("tstkbot")
+	InitDatabase(databaseName)
 
 	http.HandleFunc("/tstkbot", gotMessage)
 	err := http.ListenAndServeTLS(":8443", "fullchain.pem", "privkey.pem", nil)
