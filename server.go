@@ -64,7 +64,7 @@ func InitDatabase(databaseName string) {
 		log.Fatal(err)
 	}
 
-	session.SetMode(mgo.Monotonic, true)
+	mgoSession.SetMode(mgo.Monotonic, true)
 }
 
 // Process user message
@@ -78,7 +78,7 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Check command
 	commandType := checkCommand(object)
-    fmt.Println(commandType)
+        fmt.Println(commandType)
 	if commandType != "" {
 		processCommand(commandType, object)
 	} else {
@@ -90,16 +90,16 @@ func checkCommand(object *Object) string {
     if object.Message.Entities.Type == "" {
         return ""
     } else {
-        type := object.Message.Entities.Type
+        commandType := object.Message.Entities.Type
         offset := object.Message.Entities.Offset
         length := object.Message.Entities.Length
-        return type[offset:offset+length]
+        return commandType[offset:offset+length]
     }
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	//data, _ := httputil.DumpRequest(r, true)
-	//fmt.Printf("%s\n\n", data)
+	data, _ := httputil.DumpRequest(r, true)
+	fmt.Printf("%s\n\n", data)
 	var object Object
 	err := json.NewDecoder(r.Body).Decode(&object)
 	if err != nil {
