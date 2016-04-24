@@ -88,6 +88,7 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 	if object.Message.Chat.ID != tstkChatID {
 		sendMessage(object.Message.Chat.ID, "Тарахчу только в королях")
 		sendSticker(object.Message.Chat.ID, chickenNoFileID)
+		return
 	}
 
 	// Check command
