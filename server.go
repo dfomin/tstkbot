@@ -213,7 +213,7 @@ func processJudgeCommand(chatID int, text string) {
 		suffix := ""
 
 		if index > 0 {
-			prefix = phrase[:index-1]
+			prefix = phrase[:index]
 		}
 
 		if index < len(phrase)-1 {
