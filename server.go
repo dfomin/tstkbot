@@ -245,6 +245,7 @@ func processJudgeAddCommand(chatID int, phrase string, userID int) {
 		var newCandidate JudgePhraseCandidate
 		newCandidate.Phrase = phrase
 		newCandidate.Users = make([]int, 3)
+		candidate = newCandidate
 	} else {
 		candidate = candidates[0]
 	}
@@ -264,6 +265,7 @@ func processJudgeAddCommand(chatID int, phrase string, userID int) {
 	for i := 0; i < 3; i++ {
 		if candidate.Users[i] == 0 {
 			count = i
+			break
 		}
 	}
 
