@@ -17,13 +17,16 @@ import (
 )
 
 const (
-	pigFileID  = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
-	dogeFileID = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
+	pigFileID       = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
+	dogeFileID      = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
+	chickenNoFileID = "BQADAgADswIAAkKvaQABArcCG5J-M4IC"
 
 	apiURL = `https://api.telegram.org/bot120816766:AAHuy66RPZLVt3JwBWPwGh2Ndxt_KwAXYlE/`
 
 	// MongoDBHost represents mongo db host and port
 	MongoDBHost = "127.0.0.1:27017"
+
+	tstkChatID = -14369410
 )
 
 // Chat represents telegram chat info
@@ -79,6 +82,12 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&object)
 	if err != nil {
 		fmt.Println(err)
+	}
+
+	// Check chat, only tstk chat is supported
+	if object.Message.Chat.ID != tstkChatID {
+		sendMessage(object.Message.Chat.ID, "Тарахчу только в королях")
+		sendSticker(object.Message.Chat.ID, chickenNoFileID)
 	}
 
 	// Check command
@@ -158,7 +167,9 @@ func processJudgeCommand(id int, names []string) {
 
 func processMessage(object *Object) {
 	text := object.Message.Text
-	if string(text[len(text)-1]) == "?" {
+	if text == "" {
+		// TODO: empty message
+	} else if string(text[len(text)-1]) == "?" {
 		processQuestionMessage(object)
 	} else {
 		processStatementMessage(object)
@@ -204,12 +215,12 @@ func selectAnswer() string {
 // Send commands
 
 func sendMessage(id int, text string) {
-	answerUrl := apiURL + "sendMessage"
+	answerURL := apiURL + "sendMessage"
 	data := url.Values{}
 	data.Add("chat_id", strconv.Itoa(id))
 	data.Add("text", text)
 
-	resp, err := http.Get(answerUrl + "?" + data.Encode())
+	resp, err := http.Get(answerURL + "?" + data.Encode())
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -217,12 +228,12 @@ func sendMessage(id int, text string) {
 }
 
 func sendSticker(id int, fileID string) {
-	answerUrl := apiURL + "sendSticker"
+	answerURL := apiURL + "sendSticker"
 	data := url.Values{}
 	data.Add("chat_id", strconv.Itoa(id))
 	data.Add("sticker", fileID)
 
-	resp, err := http.Get(answerUrl + "?" + data.Encode())
+	resp, err := http.Get(answerURL + "?" + data.Encode())
 	if err != nil {
 		fmt.Println(err)
 	}
