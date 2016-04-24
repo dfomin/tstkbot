@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 
 	"encoding/json"
 	"math/rand"
@@ -78,12 +79,12 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check command
-	commandType := checkCommand(object)
+	commandType := checkCommand(&object)
 	fmt.Println(commandType)
 	if commandType != "" {
-		processCommand(commandType, object)
+		processCommand(commandType, &object)
 	} else {
-		processMessage(object)
+		processMessage(&object)
 	}
 }
 
@@ -98,6 +99,14 @@ func checkCommand(object *Object) string {
 	}
 }
 
+func processCommand(command string, object *Object) {
+
+}
+
+func processMessage(object *Object) {
+
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	data, _ := httputil.DumpRequest(r, true)
 	fmt.Printf("%s\n\n", data)
@@ -109,7 +118,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	index := strings.Index(object.Message.Text, "/punto")
 	if index != -1 {
-		sendSticker(object.Message.Chat.Id, pigFileId)
+		sendSticker(object.Message.Chat.ID, pigFileID)
 		return
 	}
 
@@ -117,23 +126,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if index != -1 {
 		names := strings.Split(object.Message.Text, " ")
 		if len(names) > 1 {
-			judge(object.Message.Chat.Id, names[1:])
+			judge(object.Message.Chat.ID, names[1:])
 		} else {
-			sendMessage(object.Message.Chat.Id, "бесишь")
+			sendMessage(object.Message.Chat.ID, "бесишь")
 		}
 		return
 	}
 
 	index = strings.Index(object.Message.Text, "/doge")
-	if index != -1 {
-		if !dogeSubscription {
-			dogeSubscription = true
-			go dogeSender(object.Message.Chat.Id)
-		}
-		return
-	}
 
-	sendMessage(object.Message.Chat.Id, selectAnswer())
+	sendMessage(object.Message.Chat.ID, selectAnswer())
 }
 
 func judge(id int, names []string) {
@@ -173,7 +175,7 @@ func judge(id int, names []string) {
 func dogeSender(id int) {
 	delay := rand.Intn(60*4) + 60*8
 	time.Sleep(time.Duration(delay) * time.Minute)
-	sendSticker(id, dogeFileId)
+	sendSticker(id, dogeFileID)
 	go dogeSender(id)
 }
 
@@ -199,12 +201,12 @@ func selectAnswer() string {
 // Send commands
 
 func sendMessage(id int, text string) {
-	url := apiURL + "sendMessage"
+	answerUrl := apiURL + "sendMessage"
 	data := url.Values{}
 	data.Add("chat_id", strconv.Itoa(id))
 	data.Add("text", text)
 
-	resp, err := http.Get(apiUrl + "?" + data.Encode())
+	resp, err := http.Get(answerUrl + "?" + data.Encode())
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -212,12 +214,12 @@ func sendMessage(id int, text string) {
 }
 
 func sendSticker(id int, fileID string) {
-	url := apiURL + "sendSticker"
+	answerUrl := apiURL + "sendSticker"
 	data := url.Values{}
 	data.Add("chat_id", strconv.Itoa(id))
-	data.Add("sticker", fileId)
+	data.Add("sticker", fileID)
 
-	resp, err := http.Get(url + "?" + data.Encode())
+	resp, err := http.Get(answerUrl + "?" + data.Encode())
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -226,7 +228,7 @@ func sendSticker(id int, fileID string) {
 }
 
 func main() {
-	dc := database.InitDatabase("tstkbot")
+	InitDatabase("tstkbot")
 
 	http.HandleFunc("/tstkbot", gotMessage)
 	err := http.ListenAndServeTLS(":8443", "fullchain.pem", "privkey.pem", nil)
