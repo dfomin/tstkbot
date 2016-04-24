@@ -31,8 +31,8 @@ type Chat struct {
 	ID int `json:"id"`
 }
 
-// Entities represents telegram message entities
-type Entities struct {
+// Entity represents telegram message entity
+type Entity struct {
 	Type   string `json:"type"`
 	Offset int    `json:"offset"`
 	Length int    `json:"length"`
@@ -42,7 +42,7 @@ type Entities struct {
 type Message struct {
 	Chat     Chat     `json:"chat"`
 	Text     string   `json:"text"`
-	Entities Entities `json:"entities,omitempty"`
+	Entities []Entity `json:"entities,omitempty"`
 }
 
 // Object represents telegram message object
@@ -71,6 +71,9 @@ func InitDatabase(databaseName string) {
 
 // Process user message
 func gotMessage(w http.ResponseWriter, r *http.Request) {
+	data, _ := httputil.DumpRequest(r, true)
+	fmt.Printf("%s\n\n", data)
+
 	// Parse telegram message
 	var object Object
 	err := json.NewDecoder(r.Body).Decode(&object)
@@ -89,14 +92,13 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkCommand(object *Object) string {
-	if object.Message.Entities.Type == "" {
-		return ""
-	} else {
-		commandType := object.Message.Entities.Type
-		offset := object.Message.Entities.Offset
-		length := object.Message.Entities.Length
-		return commandType[offset : offset+length]
+	for _, entity := range object.Message.Entities {
+		if entity.Type == "bot_command" {
+			return object.Message.Text[entity.Offset : entity.Offset + entity.Length]
+		}
 	}
+
+	return ""
 }
 
 func processCommand(command string, object *Object) {
