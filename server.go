@@ -174,38 +174,49 @@ func processPuntoCommand(object *Object) {
 	}
 }
 
-func processJudgeCommand(id int, names []string) {
-	phrases := []string{
-		"ноет",
-		"по делу",
-		"не по делу",
-		"развернул шатер",
-		"клоун",
-		"без нытья",
-		"сел в лужу",
-		"кромсает",
-		"уничтожил на молекулы",
-		"перебор",
-		"что-то ага",
-		"ни в какие ворота",
-		"самоуничтожился",
-		"несет чушь",
-		"жопка в тепле",
-		"бесит",
-		"байки травит",
-		"подгорел",
-		"бомбанул",
-		"отскок",
-		"устроил срач",
-		"куда полез?",
-	}
-	var result string
-	for _, name := range names {
-		phrase := phrases[rand.Intn(len(phrases))]
-		result += name + " " + phrase + ", "
+func processJudgeCommand(chatID int, names []string) {
+	sessionCopy := mgoSession.Copy()
+	defer sessionCopy.Close()
+
+	var phrases []JudgePhrase
+	database := sessionCopy.DB(databaseName)
+	phrasesCollection := database.C("judgePhrases")
+	err := phrasesCollection.Find(nil).All(&phrases)
+	if err != nil {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
 	}
 
-	sendMessage(id, result[:len(result)-2])
+	if len(phrases) == 0 {
+		sendSticker(chatID, penguinDunnoFileID)
+		return
+	}
+
+	result := ""
+	for _, name := range names {
+		phrase := phrases[rand.Intn(len(phrases))].Phrase
+		index := strings.Index(phrase, "#")
+
+		if index == -1 {
+			sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+			return
+		}
+
+		prefix := ""
+		suffix := ""
+
+		if index > 0 {
+			prefix = phrase[:index-1]
+		}
+
+		if index < len(phrase)-1 {
+			suffix = phrase[index+1:]
+		}
+
+		result += prefix + name + suffix + "\n"
+	}
+
+	sendMessage(chatID, result)
 }
 
 func processJudgeAddCommand(chatID int, phrase string, userID int) {
