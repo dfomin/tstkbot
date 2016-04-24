@@ -5,13 +5,14 @@ import (
 	"log"
 	"net/http"
 
-	"gopkg.in/mgo.v2"
-	"net/http/httputil"
 	"encoding/json"
 	"math/rand"
+	"net/http/httputil"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -78,7 +79,7 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Check command
 	commandType := checkCommand(object)
-        fmt.Println(commandType)
+	fmt.Println(commandType)
 	if commandType != "" {
 		processCommand(commandType, object)
 	} else {
@@ -87,14 +88,14 @@ func gotMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkCommand(object *Object) string {
-    if object.Message.Entities.Type == "" {
-        return ""
-    } else {
-        commandType := object.Message.Entities.Type
-        offset := object.Message.Entities.Offset
-        length := object.Message.Entities.Length
-        return commandType[offset:offset+length]
-    }
+	if object.Message.Entities.Type == "" {
+		return ""
+	} else {
+		commandType := object.Message.Entities.Type
+		offset := object.Message.Entities.Offset
+		length := object.Message.Entities.Length
+		return commandType[offset : offset+length]
+	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
