@@ -145,7 +145,9 @@ func checkCommand(object *Object) (string, string) {
 }
 
 func processCommand(command string, text string, object *Object) {
-	if command == "/punto" || command == "/punto@TstkBot" {
+	if command == "/start" || command == "/start@TstkBot" {
+		processStartCommand(object.Message.Chat.ID)
+	} else if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
 	} else if command == "/judge" || command == "/judge@TstkBot" {
 		processJudgeCommand(object.Message.Chat.ID, text)
@@ -159,6 +161,10 @@ func processCommand(command string, text string, object *Object) {
 	} else if command == "/judgelist" || command == "/judgelist@TstkBot" {
 		processJudgeListCommand(object.Message.Chat.ID)
 	}
+}
+
+func processStartCommand(chatID int) {
+
 }
 
 func processPuntoCommand(object *Object) {
