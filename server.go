@@ -42,6 +42,11 @@ const (
 	tstkChatID = -14369410
 )
 
+// ChatMembers represents members of chat
+type ChatMembers struct {
+	Members []string `json:"members"`
+}
+
 // Chat represents telegram chat info
 type Chat struct {
 	ID   int    `json:"id"`
@@ -149,6 +154,12 @@ func processCommand(command string, text string, object *Object) {
 		processStartCommand(object.Message.Chat.ID)
 	} else if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
+	} else if command == "/select" || command == "/select@TstkBot" {
+		chatID := object.Message.Chat.ID
+		processSelectCommand(chatID, text)
+	} else if command == "/updateMembers" || command == "/updateMembers@TstkBot" {
+		chatID := object.Message.Chat.ID
+		processUpdateMembersCommand(chatID, text)
 	} else if command == "/judge" || command == "/judge@TstkBot" {
 		processJudgeCommand(object.Message.Chat.ID, text)
 	} else if command == "/judgeadd" || command == "/judgeadd@TstkBot" {
@@ -167,6 +178,66 @@ func processStartCommand(chatID int) {
 
 }
 
+func processSelectCommand(chatID int, text string) {
+	if len(text) == 0 {
+		sendSticker(chatID, chickenFacepalmFileID)
+		return
+	}
+
+	sessionCopy := mgoSession.Copy()
+	defer sessionCopy.Close()
+
+	database := sessionCopy.DB(databaseName)
+	chatMembersCollection := database.C("chatMembers")
+
+	var chatMembers ChatMembers
+	err := chatMembersCollection.Find(nil).One(&chatMembers)
+	if err != nil {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
+	}
+
+	name := chatMembers.Members[rand.Intn(len(chatMembers.Members))]
+	sendMessage(chatID, name)
+}
+
+func processUpdateMembersCommand(chatID int, text string) {
+	sessionCopy := mgoSession.Copy()
+	defer sessionCopy.Close()
+
+	database := sessionCopy.DB(databaseName)
+	chatMembersCollection := database.C("chatMembers")
+
+	var chatMembers ChatMembers
+
+	if len(text) == 0 {
+		err := chatMembersCollection.Find(nil).One(&chatMembers)
+		if err != nil {
+			sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+			return
+		}
+
+		answer := ""
+		for _, name := range chatMembers.Members {
+			answer += name + " "
+		}
+
+		if len(answer) != 0 {
+			sendMessage(chatID, answer)
+		}
+
+		return
+	}
+
+	chatMembers.Members = splitNames(text)
+
+	_, err := chatMembersCollection.Upsert(nil, chatMembers)
+	if err != nil {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
+	}
+}
+
 func processPuntoCommand(object *Object) {
 	count := rand.Intn(5) + 1
 	for i := 0; i < count; i++ {
@@ -175,18 +246,7 @@ func processPuntoCommand(object *Object) {
 }
 
 func processJudgeCommand(chatID int, text string) {
-	elements := strings.Split(text, " ")
-	names := make([]string, len(elements))
-	count := 0
-	for _, element := range elements {
-		name := strings.TrimSpace(element)
-		if name != "" {
-			names[count] = name
-			count++
-		}
-	}
-
-	names = names[:count]
+	names := splitNames(text)
 
 	sessionCopy := mgoSession.Copy()
 	defer sessionCopy.Close()
@@ -391,6 +451,22 @@ func selectAnswer() string {
 	}
 
 	return answers[rand.Intn(len(answers))]
+}
+
+func splitNames(text string) []string {
+	elements := strings.Split(text, " ")
+	names := make([]string, len(elements))
+	count := 0
+	for _, element := range elements {
+		name := strings.TrimSpace(element)
+		if name != "" {
+			names[count] = name
+			count++
+		}
+	}
+
+	names = names[:count]
+	return names
 }
 
 // Send commands
