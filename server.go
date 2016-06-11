@@ -160,7 +160,7 @@ func processCommand(command string, text string, object *Object) {
 	} else if command == "/select" || command == "/select@TstkBot" {
 		chatID := object.Message.Chat.ID
 		processSelectCommand(chatID, text)
-	} else if command == "/updateMembers" || command == "/updateMembers@TstkBot" {
+	} else if command == "/updatemembers" || command == "/updatemembers@TstkBot" {
 		chatID := object.Message.Chat.ID
 		processUpdateMembersCommand(chatID, text)
 	} else if command == "/judge" || command == "/judge@TstkBot" {
