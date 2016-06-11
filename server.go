@@ -152,6 +152,9 @@ func checkCommand(object *Object) (string, string) {
 func processCommand(command string, text string, object *Object) {
 	if command == "/start" || command == "/start@TstkBot" {
 		processStartCommand(object.Message.Chat.ID)
+	} else if command == "/yn" || command == "/yn@TstkBot" {
+		chatID := object.Message.Chat.ID
+		processYnCommand(chatID, text)
 	} else if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
 	} else if command == "/select" || command == "/select@TstkBot" {
@@ -176,6 +179,19 @@ func processCommand(command string, text string, object *Object) {
 
 func processStartCommand(chatID int) {
 
+}
+
+func processYnCommand(chatID int, text string) {
+	if len(text) == 0 {
+		sendSticker(chatID, chickenFacepalmFileID)
+		return
+	}
+
+	if rand.Intn(2) == 0 {
+		sendMessage(chatID, "да")
+	} else {
+		sendMessage(chatID, "нет")
+	}
 }
 
 func processSelectCommand(chatID int, text string) {
