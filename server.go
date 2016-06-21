@@ -278,9 +278,12 @@ func processDirewolfCommand(chatID int, text string) {
 	}
 
 	count := rand.Intn(10) + 1
+	result := ""
 	for i := 0; i < count; i++ {
-		sendSticker(chatID, selectDirewolfCommand())
+		result += "🐶"
 	}
+
+	sendMessage(chatID, result)
 }
 
 func selectDirewolfCommand() string {
