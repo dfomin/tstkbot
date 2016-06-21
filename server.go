@@ -165,7 +165,7 @@ func processCommand(command string, text string, object *Object) {
 	} else if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
 	} else if command == "/direwolf" || command == "/direwolf@TstkBot" {
-		processDirewolfCommand(object)
+		processDirewolfCommand(object, text)
 	} else if command == "/select" || command == "/select@TstkBot" {
 		chatID := object.Message.Chat.ID
 		processSelectCommand(chatID, text)
@@ -270,7 +270,12 @@ func processPuntoCommand(object *Object) {
 	}
 }
 
-func processDirewolfCommand(object *Object) {
+func processDirewolfCommand(object *Object, text string) {
+	if len(text) == 0 {
+		sendSticker(chatID, chickenFacepalmFileID)
+		return
+	}
+
 	count := rand.Intn(10) + 1
 	for i := 0; i < count; i++ {
 		sendSticker(object.Message.Chat.ID, selectDirewolfCommand())
