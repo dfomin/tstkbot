@@ -20,6 +20,13 @@ import (
 const (
 	pigFileID  = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
 	dogeFileID = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
+	dog1FileID = "BQADAgAD_gAD9HsZAAHbV7rs2RBy4wI"
+	dog2FileID = "BQADAgADBAEAAvR7GQABuSWDS5cF6C0C"
+	dog3FileID = "BQADAgADCwEAAvR7GQABE0Ucfv61xh8C"
+	dog4FileID = "BQADAgADDwEAAvR7GQABZ2-c3X68kfMC"
+	dog5FileID = "BQADAgADPwEAAvR7GQAB1njeyMer9qQC"
+	dog6FileID = "BQADAgADQQEAAvR7GQABpqipLmPKD7UC"
+	dog7FileID = "BQADAgADawEAAvR7GQABuAEiUvxH-TUC"
 
 	chickenNoFileID       = "BQADAgADswIAAkKvaQABArcCG5J-M4IC"
 	chickenThinkingFileID = "BQADAgADvwIAAkKvaQABKt6_X0LBVfYC"
@@ -157,6 +164,8 @@ func processCommand(command string, text string, object *Object) {
 		processYnCommand(chatID, text)
 	} else if command == "/punto" || command == "/punto@TstkBot" {
 		processPuntoCommand(object)
+	} else if command == "/direwolf" || command == "/direwolf@TstkBot" {
+		processDirewolfCommand(object)
 	} else if command == "/select" || command == "/select@TstkBot" {
 		chatID := object.Message.Chat.ID
 		processSelectCommand(chatID, text)
@@ -259,6 +268,27 @@ func processPuntoCommand(object *Object) {
 	for i := 0; i < count; i++ {
 		sendSticker(object.Message.Chat.ID, pigFileID)
 	}
+}
+
+func processDirewolfCommand(object *Object) {
+	count := rand.Intn(10) + 1
+	for i := 0; i < count; i++ {
+		sendSticker(object.Message.Chat.ID, selectDirewolfCommand())
+	}
+}
+
+func selectDirewolfCommand() string {
+	dogs := []string{
+		dogeFileID,
+		dog1FileID,
+		dog2FileID,
+		dog3FileID,
+		dog4FileID,
+		dog5FileID,
+		dog6FileID,
+		dog7FileID,
+	}
+	return dogs[rand.Intn(len(dogs))]
 }
 
 func processJudgeCommand(chatID int, text string) {
