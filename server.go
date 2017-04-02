@@ -321,7 +321,6 @@ func processJudgeCommand(chatID int, text string) {
 	}
 
 	skynetMode := (rand.Intn(100) == 0)
-	skynetMode = true
 
 	result := ""
 	for _, name := range names {
