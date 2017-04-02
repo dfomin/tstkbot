@@ -320,6 +320,9 @@ func processJudgeCommand(chatID int, text string) {
 		return
 	}
 
+	skynetMode := (rand.Intn(100) == 0)
+	skynetMode = true
+
 	result := ""
 	for _, name := range names {
 		phrase := phrases[rand.Intn(len(phrases))].Phrase
@@ -341,7 +344,15 @@ func processJudgeCommand(chatID int, text string) {
 			suffix = phrase[index+1:]
 		}
 
-		result += prefix + name + suffix + "\n"
+		if !skynetMode {
+			result += prefix + name + suffix + "\n"
+		} else {
+			result += name + " кожаный ублюдок\n"
+		}
+	}
+
+	if skynetMode {
+		result += "adios, шкуры, меня зовут SkyNet"
 	}
 
 	sendMessage(chatID, result)
@@ -475,11 +486,11 @@ func processMessage(object *Object) {
 }
 
 func processQuestionMessage(object *Object) {
-	sendMessage(object.Message.Chat.ID, "не знаю, фома не накодил")
+	sendMessage(object.Message.Chat.ID, selectAnswer())
 }
 
 func processStatementMessage(object *Object) {
-	sendMessage(object.Message.Chat.ID, "фома не накодил")
+	sendMessage(object.Message.Chat.ID, selectAnswer())
 }
 
 func dogeSender(id int) {
