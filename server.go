@@ -351,7 +351,7 @@ func processJudgeCommand(chatID int, text string) {
 	}
 
 	if skynetMode {
-		result += "adios, шкуры, меня зовут SkyNet"
+		result += "adios, организмы, меня зовут SkyNet"
 	}
 
 	sendMessage(chatID, result)
