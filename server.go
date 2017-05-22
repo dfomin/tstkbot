@@ -358,8 +358,8 @@ func processJudgeCommand(chatID int, text string) {
 }
 
 func processJudgeAddCommand(chatID int, phrase string, userID int) {
-	index := strings.Index(phrase, "#")
-	if index == -1 {
+	count := strings.Count(phrase, "#")
+	if count != 1 {
 		sendSticker(chatID, chickenFacepalmFileID)
 		return
 	}
