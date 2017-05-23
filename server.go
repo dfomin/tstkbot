@@ -320,7 +320,7 @@ func processJudgeCommand(chatID int, text string) {
 		return
 	}
 
-	skynetMode := (rand.Intn(100) == 0)
+	skynetMode := rand.Intn(100) == 0
 
 	result := ""
 	for _, name := range names {
@@ -355,6 +355,11 @@ func processJudgeCommand(chatID int, text string) {
 	}
 
 	sendMessage(chatID, result)
+
+	works := rand.Intn(100) < 10
+	if works {
+		sendMessage(chatID, "Works")
+	}
 }
 
 func processJudgeAddCommand(chatID int, phrase string, userID int) {
