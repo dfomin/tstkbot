@@ -170,6 +170,9 @@ func processCommand(command string, text string, object *Object) {
 	} else if command == "/select" || command == "/select@TstkBot" {
 		chatID := object.Message.Chat.ID
 		processSelectCommand(chatID, text)
+	} else if command == "/subset" || command == "/subset@TstkBot" {
+		chatID := object.Message.Chat.ID
+		processSubsetCommand(chatID, text)
 	} else if command == "/updatemembers" || command == "/updatemembers@TstkBot" {
 		chatID := object.Message.Chat.ID
 		processUpdateMembersCommand(chatID, text)
@@ -225,6 +228,35 @@ func processSelectCommand(chatID int, text string) {
 
 	name := chatMembers.Members[rand.Intn(len(chatMembers.Members))]
 	sendMessage(chatID, name)
+}
+
+func processSubsetCommand(chatID int, text string) {
+	if len(text) == 0 {
+		sendSticker(chatID, chickenFacepalmFileID)
+		return
+	}
+
+	sessionCopy := mgoSession.Copy()
+	defer sessionCopy.Close()
+
+	database := sessionCopy.DB(databaseName)
+	chatMembersCollection := database.C("chatMembers")
+
+	var chatMembers ChatMembers
+	err := chatMembersCollection.Find(nil).One(&chatMembers)
+	if err != nil {
+		sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+		return
+	}
+
+	names := ""
+	for _, name := range chatMembers.Members {
+		if rand.Intn(2) == 0 {
+			names += name + " "
+		}
+	}
+
+	sendMessage(chatID, names)
 }
 
 func processUpdateMembersCommand(chatID int, text string) {
