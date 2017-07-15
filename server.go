@@ -256,6 +256,10 @@ func processSubsetCommand(chatID int, text string) {
 		}
 	}
 
+	if len(names) == 0 {
+		names = "⛔️"
+	}
+
 	sendMessage(chatID, names)
 }
 
