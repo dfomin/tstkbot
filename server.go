@@ -342,6 +342,20 @@ func processJudgeCommand(chatID int, text string) {
 	sessionCopy := mgoSession.Copy()
 	defer sessionCopy.Close()
 
+	if len(names) == 0 {
+		database := sessionCopy.DB(databaseName)
+		chatMembersCollection := database.C("chatMembers")
+
+		var chatMembers ChatMembers
+		err := chatMembersCollection.Find(nil).One(&chatMembers)
+		if err != nil {
+			sendMessage(chatID, "что-то у фомы сломалось 😬😬😬")
+			return
+		}
+
+		names = chatMembers.Members
+	}
+
 	var phrases []JudgePhrase
 	database := sessionCopy.DB(databaseName)
 	phrasesCollection := database.C("judgePhrases")
