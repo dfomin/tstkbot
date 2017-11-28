@@ -40,6 +40,8 @@ const (
 	penguinDunnoFileID   = "BQADAQADyCIAAtpxZge0ITVcWNv_vwI"
 	penguinLookOutFileID = "BQADAQADvCIAAtpxZgf5jpah4VvMqQI"
 
+	owlWhoMeFileID = "CAADAgAD3wEAAjZ2IA4lakrBbQW2kwI"
+
 	apiURL = `https://api.telegram.org/bot120816766:AAHuy66RPZLVt3JwBWPwGh2Ndxt_KwAXYlE/`
 
 	// MongoDBHost represents mongo db host and port
@@ -354,6 +356,15 @@ func processJudgeCommand(chatID int, text string) {
 		}
 
 		names = chatMembers.Members
+	}
+
+	if len(names) == 1 {
+		if names[0] == "бот" || names[0] == "bot" {
+			if rand.Intn(100) < 10 {
+				sendSticker(chatID, owlWhoMeFileID)
+				return
+			}
+		}
 	}
 
 	var phrases []JudgePhrase
