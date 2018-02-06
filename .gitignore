@@ -1,2 +1,3 @@
 server
 *.pem
+private.go
