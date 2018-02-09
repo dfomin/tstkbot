@@ -1,3 +1,4 @@
-server
 *.pem
 private.go
+bin/
+pkg/

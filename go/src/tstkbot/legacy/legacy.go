@@ -1,22 +1,6 @@
-package main
+package legacy
 
-import (
-	"fmt"
-	"log"
-	"net/http"
-	"net/url"
-
-	"encoding/json"
-	"math/rand"
-	"net/http/httputil"
-	"strconv"
-	"strings"
-	"time"
-
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-)
-
+/*
 const (
 	pigFileID  = "BQADAgAD6AAD9HsZAAF6rDKYKVsEPwI"
 	dogeFileID = "BQADAgAD3gAD9HsZAAFphGBFqImfGAI"
@@ -41,8 +25,6 @@ const (
 	penguinLookOutFileID = "BQADAQADvCIAAtpxZgf5jpah4VvMqQI"
 
 	owlWhoMeFileID = "CAADAgAD3wEAAjZ2IA4lakrBbQW2kwI"
-
-	apiURL = `https://api.telegram.org/bot120816766:AAHuy66RPZLVt3JwBWPwGh2Ndxt_KwAXYlE/`
 
 	// MongoDBHost represents mongo db host and port
 	MongoDBHost  = "127.0.0.1:27017"
@@ -603,7 +585,7 @@ func splitNames(text string) []string {
 // Send commands
 
 func sendMessage(id int, text string) {
-	answerURL := apiURL + "sendMessage"
+	answerURL := private.TelegramBotURL + "sendMessage"
 	data := url.Values{}
 	data.Add("chat_id", strconv.Itoa(id))
 	data.Add("text", text)
@@ -616,7 +598,7 @@ func sendMessage(id int, text string) {
 }
 
 func sendSticker(id int, fileID string) {
-	answerURL := apiURL + "sendSticker"
+	answerURL := private.TelegramBotURL + "sendSticker"
 	data := url.Values{}
 	data.Add("chat_id", strconv.Itoa(id))
 	data.Add("sticker", fileID)
@@ -627,14 +609,111 @@ func sendSticker(id int, fileID string) {
 	}
 
 	defer resp.Body.Close()
-}
+}*/
 
-func main() {
-	InitDatabase(databaseName)
-
+/*func InitServer() {
 	http.HandleFunc("/tstkbot", gotMessage)
 	err := http.ListenAndServeTLS(":8443", "fullchain.pem", "privkey.pem", nil)
 	if err != nil {
 		fmt.Println("ListenAndServe: ", err)
 	}
+}*/
+
+/*func (c *DatabaseController) AddUser(userId int) {
+	exists := c.CheckUser(userId)
+	if !exists {
+		stmt, err := c.DataBase.Prepare("INSERT INTO " + DB_NAME + ".user(telegram_id) VALUES($1)")
+		checkErr("Prepare insert user failed", err)
+		_, err = stmt.Exec(userId)
+		checkErr("Exec insert user failed", err)
+	}
 }
+
+func (c *DatabaseController) GetUser(userId int) int {
+	var id int
+	var telegramId int
+	query := "SELECT * FROM " + DB_NAME + ".user where telegram_id=$1"
+	err := c.DataBase.QueryRow(query, userId).Scan(&id, &telegramId)
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatalf("getting user failed %s %v", userId, err)
+	}
+	return id
+}
+
+func (c *DatabaseController) CheckUser(userId int) bool {
+	var exists bool
+	query := "SELECT exists (SELECT * FROM " + DB_NAME + ".user where telegram_id=$1)"
+	err := c.DataBase.QueryRow(query, userId).Scan(&exists)
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatalf("checking if row exists failed %s %v", userId, err)
+	}
+	return exists
+}
+
+func (c *DatabaseController) AddJudge(userId int, phrase string) {
+	exists := c.CheckUser(userId)
+	if !exists {
+		stmt, err := c.DataBase.Prepare("INSERT INTO " + DB_NAME + ".user(telegram_id) VALUES($1)")
+		checkErr("Prepare insert user failed", err)
+		_, err = stmt.Exec(userId)
+		checkErr("Exec insert user failed", err)
+	}
+	id := c.GetUser(userId)
+	stmt, err := c.DataBase.Prepare("INSERT INTO " + DB_NAME + ".judge(phrase, author_id) VALUES($1, $2)")
+	checkErr("Prepare insert judge failed", err)
+	_, err = stmt.Exec(phrase, id)
+	checkErr("Exec insert judge failed", err)
+}
+
+func (c *DatabaseController) GetJudge(phrase string) int {
+	var id int
+	var judge string
+	var authorId int
+	query := "SELECT * FROM " + DB_NAME + ".judge where phrase=$1"
+	err := c.DataBase.QueryRow(query, phrase).Scan(&id, &judge, &authorId)
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatalf("getting judge failed %s %v", phrase, err)
+	}
+	return id
+}
+
+func (c *DatabaseController) CheckJudge(phrase string) bool {
+	var exists bool
+	query := "SELECT exists (SELECT * FROM " + DB_NAME + ".judge where phrase=$1)"
+	err := c.DataBase.QueryRow(query, phrase).Scan(&exists)
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatalf("checking if row exists failed %s %v", phrase, err)
+	}
+	return exists
+}
+
+func (c *DatabaseController) AddVote(userId int, phrase string) {
+	exists := c.CheckUser(userId)
+	if !exists {
+		stmt, err := c.DataBase.Prepare("INSERT INTO " + DB_NAME + ".user(telegram_id) VALUES($1)")
+		checkErr("Prepare insert user failed", err)
+		_, err = stmt.Exec(userId)
+		checkErr("Exec insert user failed", err)
+	}
+
+	judgeExists := c.CheckJudge(phrase)
+	id := c.GetUser(userId)
+	if !judgeExists {
+		stmt, err := c.DataBase.Prepare("INSERT INTO " + DB_NAME + ".judge(phrase, author_id) VALUES($1, $2)")
+		checkErr("Prepare insert judge failed", err)
+		_, err = stmt.Exec(phrase, id)
+		checkErr("Exec insert judge failed", err)
+	}
+
+	judgeId := c.GetJudge(phrase)
+	stmt, err := c.DataBase.Prepare("INSERT INTO " + DB_NAME + ".vote(judge_id, user_id) VALUES($1, $2)")
+	checkErr("Prepare insert vote failed", err)
+	_, err = stmt.Exec(judgeId, id)
+	checkErr("Exec insert vote failed", err)
+}
+
+func checkErr(message string, err error) {
+	if err != nil {
+		log.Fatalf(message, err)
+	}
+}*/
